@@ -110,3 +110,39 @@ plot(fsa.nb.tri, coordinates(fsa.shp), add=TRUE)
 # Plot connectivity by nearest neighbors
 plot(fsa.shp, border='darkgrey', las=1, main='Connectivity by Nearest Neighbors')
 plot(fsa.nb.knn, coordinates(fsa.shp), add=TRUE)
+
+## 4. Smooth Rates
+
+ili.ebe = EBlocal(ili$visits/(3*52), ili$pop, fsa.nb)
+ili.ebe[1:10,]
+
+nclr = 5
+plotclr = brewer.pal(nclr, 'Reds')
+class.raw = classIntervals(round(ili.ebe$raw*10000,0), nclr, style='quantile')
+# Note that we take the breaks from the crude rate map and pass them to the 
+#  smoothed rates map so that we have the same class boundaries for both maps
+class.est = classIntervals(round(ili.ebe$est*10000,0), n=nclr, style='fixed',
+                           fixedBreaks=class.raw$brks)
+
+colcode.raw = findColours(class.raw, plotclr)
+colcode.est = findColours(class.est, plotclr)
+
+par(mfrow=c(1,2))
+
+plot(fsa.shp)
+plot(fsa.shp, col=colcode.raw, add=T)
+title(sub="Raw Rates of ILI Visits (Weekly Visits per 10,000)")
+legend('topleft', legend=names(attr(colcode.raw, "table")), fill=attr(colcode.raw,"palette"), cex=0.9, bty='n')
+
+plot(fsa.shp)
+plot(fsa.shp, col=colcode.est, add=T)
+title(sub="EBE (Local) Smoothed Rates of ILI Visits (Weekly Visits per 10,000)")
+legend('topleft', legend=names(attr(colcode.est, "table")), fill=attr(colcode.est,"palette"), cex=0.9, bty='n')
+
+par(mfrow=c(1,1))
+
+ili.ebe$diff = ili.ebe$raw - ili.ebe$est
+class.diff <- cbind(fsa.visits$fsa,ili.ebe$diff)
+class.diff[,-1.683e-03]
+which[class.diff==1.792e-03]
+
